@@ -1,0 +1,13 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "9IUWjvsRetrzCEeIiSEhoBf/J00=",
+			"path": "gobot.io/x/gobot/platforms/dji/tello",
+			"revision": "a4d54794e0f2a9678dbe33230fbcb26613a4d53f",
+			"revisionTime": "2018-07-10T09:22:23Z"
+		}
+	],
+	"rootPath": "github.com/epaoletta/tello_tests"
+}
