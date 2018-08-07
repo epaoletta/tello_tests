@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/epaoletta/tello_tests/src/flightdata"
 	"github.com/tello"
@@ -13,36 +12,75 @@ var (
 	drone tello.Tello
 )
 
+const (
+	flightDataUpdatePeriod = 100
+)
+
 func main() {
 	// app start
 	log.Printf("Tello Desktop")
 	log.Printf("event: app_start")
 
-	// connect to drone
-	log.Printf("event: connect_to_drone")
+	// drone connect control
+	log.Printf("event: drone_control_connect")
 	err := drone.ControlConnectDefault()
 	if err != nil {
-		errStr := fmt.Sprintf("connection_error: %v", err)
+		errStr := fmt.Sprintf("drone_control_connect_error: %v", err)
 		log.Fatal(errStr)
 		panic(errStr)
 	}
+	defer drone.ControlDisconnect()
 
-	// log flight data
-	log.Printf("event: flight_data")
-	go flightDataLoop()
+	// drone flight data
+	log.Printf("event: drone_flight_data")
+	flightDataManager, flightDataChannel, err := getFlightDataManager()
+	if err != nil {
+		errStr := fmt.Sprintf("drone_flight_data_error: %v", err)
+		log.Fatal(errStr)
+		panic(errStr)
+	}
+	go flightDataManager.Loop(flightDataChannel)
+
+	/*
+		// video feed
+		log.Printf("event: drone_video_connect")
+		_, err = telloDrone.VideoConnectDefault()
+		if err != nil {
+			errStr := fmt.Sprintf("drone_video_connect_error: %v", err)
+			log.Fatal(errStr)
+			panic(errStr)
+		}
+		defer telloDrone.VideoDisconnect()
+		telloDrone.StartVideo()
+		_ = gocv.NewWindow("video_feed")
+
+
+				// video update
+			videoBuffer := <-videoChannel
+			err := video.Update(videoWindow, videoBuffer)
+			if err != nil {
+				log.Printf("video_frame_lost_error: %v", err.Error())
+			}
+	*/
 
 	log.Printf("event: flight_loop")
+	var i int64
 	for {
+		i++
 
+		if i == 99999999 {
+			flightDataManager.BreakLoop()
+		}
 	}
 
 }
 
-func flightDataLoop() {
-	for {
-		flightData := drone.GetFlightData()
-		flightdata.LogFlightData(flightData)
+//
 
-		time.Sleep(50 * time.Millisecond)
-	}
+func getFlightDataManager() (flightdata.Manager, <-chan tello.FlightData, error) {
+	manager := flightdata.ConsoleRaw()
+	channel, err := drone.StreamFlightData(false, flightDataUpdatePeriod)
+	return manager, channel, err
 }
+
+// func getVideoManager() (video.Manager, <-chan )

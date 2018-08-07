@@ -7,12 +7,6 @@
 			"path": "github.com/SMerrony/tello",
 			"revision": "c926f75c8b96d50cbcd40b0acdf503594e9d84fa",
 			"revisionTime": "2018-07-31T12:02:00Z"
-		},
-		{
-			"checksumSHA1": "9IUWjvsRetrzCEeIiSEhoBf/J00=",
-			"path": "gobot.io/x/gobot/platforms/dji/tello",
-			"revision": "a4d54794e0f2a9678dbe33230fbcb26613a4d53f",
-			"revisionTime": "2018-07-10T09:22:23Z"
 		}
 	],
 	"rootPath": "github.com/epaoletta/tello_tests"

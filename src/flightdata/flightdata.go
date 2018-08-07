@@ -2,11 +2,19 @@ package flightdata
 
 import (
 	"fmt"
-	"log"
 	"math"
+	"sync"
 
 	"github.com/tello"
 )
+
+// Manager flight data manager interface
+type Manager interface {
+	Loop(<-chan tello.FlightData)
+	BreakLoop()
+}
+
+//
 
 type field struct {
 	label string
@@ -59,14 +67,9 @@ const (
 )
 
 var (
-	fields [fNumFields]field
+	fieldsMu sync.RWMutex
+	fields   [fNumFields]field
 )
-
-// LogFlightData log flight data
-func LogFlightData(flightData tello.FlightData) {
-	updateFields(flightData)
-	logFields()
-}
 
 func updateFields(flightData tello.FlightData) {
 	fields[fHeight].value = fmt.Sprintf("%.1fm", float32(flightData.Height)/10)
@@ -130,8 +133,4 @@ func boolToYN(b bool) string {
 		return "Y"
 	}
 	return "N"
-}
-
-func logFields() {
-	log.Printf("%v", fields)
 }
