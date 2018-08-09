@@ -8,29 +8,29 @@ import (
 
 // ConsoleRaw console raw flight data
 func ConsoleRaw() Manager {
-	return &consoleRaw{}
+	return &consoleraw{}
 }
 
-type consoleRaw struct {
+type consoleraw struct {
 	loop bool
 }
 
 //
 
-func (consoleRaw *consoleRaw) Loop(channel <-chan tello.FlightData) {
-	consoleRaw.loop = true
+func (consoleraw *consoleraw) Loop(channel <-chan tello.FlightData) {
+	consoleraw.loop = true
 	for {
-		if !consoleRaw.loop {
+		if !consoleraw.loop {
 			break
 		}
 		data := <-channel
-		fieldsMu.Lock()
+		// fieldsMu.Lock()
 		updateFields(data)
 		log.Printf("%v", fields)
-		fieldsMu.Unlock()
+		// fieldsMu.Unlock()
 	}
 }
 
-func (consoleRaw *consoleRaw) BreakLoop() {
-	consoleRaw.loop = false
+func (consoleraw *consoleraw) BreakLoop() {
+	consoleraw.loop = false
 }
