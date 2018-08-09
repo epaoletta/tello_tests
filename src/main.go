@@ -3,8 +3,10 @@ package main
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/epaoletta/tello_tests/src/flightdata"
+	"github.com/epaoletta/tello_tests/src/video"
 	"github.com/tello"
 )
 
@@ -13,7 +15,14 @@ var (
 )
 
 const (
-	flightDataUpdatePeriod = 100
+	showFlightData = true
+	showVideo      = true
+)
+
+const (
+	flightDataUpdatePeriod   = 100
+	videoConnectConfirmation = 250
+	desiredFPS               = 30
 )
 
 func main() {
@@ -21,7 +30,7 @@ func main() {
 	log.Printf("Tello Desktop")
 	log.Printf("event: app_start")
 
-	// drone connect control
+	// drone control connect
 	log.Printf("event: drone_control_connect")
 	err := drone.ControlConnectDefault()
 	if err != nil {
@@ -32,45 +41,41 @@ func main() {
 	defer drone.ControlDisconnect()
 
 	// drone flight data
-	log.Printf("event: drone_flight_data")
-	flightDataManager, flightDataChannel, err := getFlightDataManager()
-	if err != nil {
-		errStr := fmt.Sprintf("drone_flight_data_error: %v", err)
-		log.Fatal(errStr)
-		panic(errStr)
-	}
-	go flightDataManager.Loop(flightDataChannel)
+	if showFlightData {
+		log.Printf("event: drone_flight_data")
+		flightDataManager, flightDataChannel, err := getFlightDataManager()
+		if err != nil {
+			errStr := fmt.Sprintf("drone_flight_data_error: %v", err)
+			log.Fatal(errStr)
+			panic(errStr)
+		}
 
-	/*
-		// video feed
+		go flightDataManager.Loop(flightDataChannel)
+	}
+
+	// video feed
+	if showVideo {
 		log.Printf("event: drone_video_connect")
-		_, err = telloDrone.VideoConnectDefault()
+		drone.StartVideo()
+		go func() {
+			for {
+				drone.StartVideo()
+				time.Sleep(videoConnectConfirmation * time.Millisecond)
+			}
+		}()
+		videoManager, videoChannel, err := getVideoManager()
 		if err != nil {
 			errStr := fmt.Sprintf("drone_video_connect_error: %v", err)
 			log.Fatal(errStr)
 			panic(errStr)
 		}
-		defer telloDrone.VideoDisconnect()
-		telloDrone.StartVideo()
-		_ = gocv.NewWindow("video_feed")
 
-
-				// video update
-			videoBuffer := <-videoChannel
-			err := video.Update(videoWindow, videoBuffer)
-			if err != nil {
-				log.Printf("video_frame_lost_error: %v", err.Error())
-			}
-	*/
+		go videoManager.Loop(videoChannel)
+	}
 
 	log.Printf("event: flight_loop")
-	var i int64
 	for {
-		i++
 
-		if i == 99999999 {
-			flightDataManager.BreakLoop()
-		}
 	}
 
 }
@@ -83,4 +88,8 @@ func getFlightDataManager() (flightdata.Manager, <-chan tello.FlightData, error)
 	return manager, channel, err
 }
 
-// func getVideoManager() (video.Manager, <-chan )
+func getVideoManager() (video.Manager, <-chan []byte, error) {
+	manager := video.ConsoleRaw(desiredFPS)
+	channel, err := drone.VideoConnectDefault()
+	return manager, channel, err
+}
